@@ -19,9 +19,10 @@ const getDiagonals = (n, m) => {
    * Starting from the upper left corner, fills in a grid with each possible entry.
    * Note: Mutates grid
    */
-  const fillGrid = grid => {
+  const fillGrid = (grid, count = 0) => {
     if (isFilled(grid)) {
-      if (isComplete(grid)) {
+      // Has min expected diagonals
+      if (count >= m) {
         return grid;
       }
       // Is filled but not complete, return null to backtrack
@@ -32,7 +33,7 @@ const getDiagonals = (n, m) => {
       // Only continue if it is valid
       if (isNextPlacementValid(grid, entry)) {
         grid.push(entry);
-        const result = fillGrid(grid);
+        const result = fillGrid(grid, entry > 0 ? count + 1 : count);
         if (result !== null) {
           return result;
         }
@@ -49,18 +50,6 @@ const getDiagonals = (n, m) => {
   const isFilled = grid => grid.length === n * n;
 
   /**
-   * Returns true if the number of diagonals equals the expected number m.
-   * Assumes the grid is filled.
-   */
-  const isComplete = grid => {
-    const diagonals = grid.reduce(
-      (prev, cur) => (cur > 0 ? prev + 1 : prev),
-      0
-    );
-    return diagonals === m;
-  };
-
-  /**
    * Checks if adding the entry to the next position is valid.
    * The next position is the next open spot in the grid (grid[grid.length]).
    * A position is considered valid if the entry does not touch any of the surrounding boxes.
@@ -72,36 +61,17 @@ const getDiagonals = (n, m) => {
     }
     const [row, col] = getNextPos(grid);
     // If attempt to get an invalid position (ie, col outside col size), value will be null.
+    // We only exclude right, bottom, etc because these values have not been generated yet.
     const left = getAt(grid, row, col - 1);
     const top = getAt(grid, row - 1, col);
-    const right = getAt(grid, row, col + 1);
-    const bottom = getAt(grid, row + 1, col);
     const topleft = getAt(grid, row - 1, col - 1);
     const topright = getAt(grid, row - 1, col + 1);
-    const bottomleft = getAt(grid, row + 1, col - 1);
-    const bottomright = getAt(grid, row + 1, col + 1);
     // TopLeft -> BottomRight
-    if (
-      entry === 1 &&
-      (topleft === 1 ||
-        bottomright === 1 ||
-        left === 2 ||
-        top === 2 ||
-        right === 2 ||
-        bottom === 2)
-    ) {
+    if (entry === 1 && (topleft === 1 || left === 2 || top === 2)) {
       return false;
     }
     // BottomLeft -> TopRight
-    if (
-      entry === 2 &&
-      (bottomleft === 2 ||
-        topright === 2 ||
-        left === 1 ||
-        top === 1 ||
-        right === 1 ||
-        bottom === 1)
-    ) {
+    if (entry === 2 && (topright === 2 || left === 1 || top === 1)) {
       return false;
     }
     return true;
